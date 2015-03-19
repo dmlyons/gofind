@@ -21,25 +21,27 @@ var showErrors bool
 
 func main() {
 	var where, what string
+	var numWorkers int
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	flag.BoolVar(&showErrors, `showErrors`, false, `Show errors along the way`)
+	flag.BoolVar(&showErrors, `e`, false, `Show errors along the way`)
+	flag.IntVar(&numWorkers, `w`, 100, `Number of workers to use`)
 	flag.Parse()
 	where = flag.Arg(0)
 	what = flag.Arg(1)
 	fmt.Printf("Searching %s for %s\n", where, what)
 
 	jobs := make(chan search, 100000)
-	results := make(chan string, 100000)
+	results := make(chan string, 10)
 
 	// launch the workers
-	for i := 1; i <= 100; i++ {
+	for i := 1; i <= numWorkers; i++ {
 		go findInDirWorker(i, jobs, results)
 	}
+	go showResults(results)
 
 	wg.Add(1)
 	jobs <- search{what, where}
-	go showResults(results)
 	wg.Wait()
 	close(jobs)
 	close(results)
