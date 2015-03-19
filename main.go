@@ -27,13 +27,13 @@ func main() {
 	fmt.Printf("Searching %s for %s\n", where, what)
 
 	jobs := make(chan search, 100000)
-	results := make(chan string, 10000)
+	results := make(chan string, 100000)
 
-	wnum := 1
-	for i := 1; i <= 100; i++ {
-		go findInDirWorker(wnum, jobs, results)
-		wnum++
+	// launch the workers
+	for i := 1; i <= 10; i++ {
+		go findInDirWorker(i, jobs, results)
 	}
+
 	wg.Add(1)
 	jobs <- search{what, where}
 	go showResults(results)
@@ -63,9 +63,7 @@ func findInDirWorker(w int, jobs chan search, result chan<- string) {
 			if err != nil {
 				continue
 			}
-			full := fmt.Sprintf("%s%v%s", path, os.PathSeparator, f.Name())
-			fmt.Println(os.PathSeparator)
-			fmt.Println(full)
+			full := fmt.Sprintf("%s%v%s", path, string(os.PathSeparator), f.Name())
 			if strings.Contains(f.Name(), j.what) {
 				res := fmt.Sprintf("%s (%d)", full, w)
 				result <- res
