@@ -30,7 +30,7 @@ func main() {
 	results := make(chan string, 100000)
 
 	// launch the workers
-	for i := 1; i <= 10; i++ {
+	for i := 1; i <= 100; i++ {
 		go findInDirWorker(i, jobs, results)
 	}
 
