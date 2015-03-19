@@ -17,10 +17,13 @@ type search struct {
 
 var wg sync.WaitGroup
 
+var showErrors bool
+
 func main() {
 	var where, what string
-
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	flag.BoolVar(&showErrors, `showErrors`, false, `Show errors along the way`)
 	flag.Parse()
 	where = flag.Arg(0)
 	what = flag.Arg(1)
@@ -54,13 +57,18 @@ func findInDirWorker(w int, jobs chan search, result chan<- string) {
 	for j := range jobs {
 		d, err := ioutil.ReadDir(j.where)
 		if err != nil {
-			//fmt.Printf("DirErr: %v\n", err)
+			if showErrors {
+				fmt.Printf("DirErr: %v\n", err)
+			}
 			wg.Done()
 			continue
 		}
 		for _, f := range d {
 			path, err := filepath.Abs(j.where)
 			if err != nil {
+				if showErrors {
+					fmt.Printf("DirErr: %v\n", err)
+				}
 				continue
 			}
 			full := fmt.Sprintf("%s%v%s", path, string(os.PathSeparator), f.Name())
